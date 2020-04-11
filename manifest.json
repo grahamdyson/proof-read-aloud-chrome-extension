@@ -6,8 +6,8 @@
 			"run_at": "document_start"
 		}
 	],
-	"description": "Single key press (control/command+space) to read aloud page text starting with the element at the current mouse cursor position.",
+	"description": "Single key press (control/command+space) for speech synthesis to read aloud page text starting with the element at the current mouse cursor position.\nFor example, will read a paragraph tag the mouse cursor is over from its start, then continue reading the rest of the tag's subsequent siblings.\nPressing control/command+space again while text is being read will stop it.\nUses https://https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis and by default \"Google US English\" voice. Open source https://github.com/grahamdyson/proofread-aloud-text-to-speech-chrome-extension.",
 	"manifest_version": 2,
-	"name": "proof read aloud",
+	"name": "proofread aloud text to speech",
 	"version": "1.0"
 }
