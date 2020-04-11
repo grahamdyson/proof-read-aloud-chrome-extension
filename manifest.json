@@ -1,0 +1,13 @@
+{
+	"content_scripts": [
+		{
+			"matches": [ "http://*/*", "https://*/*" ],
+			"js": [ "document-start.js" ],
+			"run_at": "document_start"
+		}
+	],
+	"description": "Single key press (control/command+space) to read aloud page text starting with the element at the current mouse cursor position.",
+	"manifest_version": 2,
+	"name": "proof read aloud",
+	"version": "1.0"
+}
