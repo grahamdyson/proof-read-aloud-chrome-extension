@@ -1,11 +1,11 @@
 'use strict';
 
-let voice, x = 0, y = 0;
+let cancelled, voice, x = 0, y = 0;
 
 if (window === top) {
 	window.addEventListener("keypress", onKeyPress);
 	window.addEventListener("mousemove", onMouseMove);
-	window.speechSynthesis.onvoiceschanged = onVoicesChanged;
+	window.speechSynthesis.onvoiceschanged = assignVoice;
 }
 
 function onKeyPress({
@@ -13,41 +13,99 @@ function onKeyPress({
 	key,
 }) {
 	if (ctrlKey && key === " ")
-		if (window.speechSynthesis.speaking)
-			window.speechSynthesis.cancel();
-		else {
-			window.speechSynthesis.speak(
-				createUtteranceFromElement(
-					getElementFromCurrentMouse(),
-				),
-			);
-		}
+		cancelOrSpeak();
+}
 
-	function getElementFromCurrentMouse() {
-		const element = document.elementFromPoint(x, y);
+function cancelOrSpeak() {
+	if (window.speechSynthesis.speaking)
+		cancel();
+	else
+		speakElement(
+			getElementFromCurrentMouse(),
+		);
+}
 
-		return whenAnchor() || element;
+function cancel() {
+	cancelled = true;
+	window.speechSynthesis.cancel();
+}
 
-		function whenAnchor() {
-			return (
-				[ "A", "SPAN" ].includes(element.tagName)
-				&&
-				element.parentElement
-			);
+function speakElement(
+	element,
+) {
+	cancelled = false;
+
+	window.speechSynthesis.speak(
+		createUtteranceFromElement(
+			element,
+		)
+	);
+}
+
+function getElementFromCurrentMouse() {
+	const element = document.elementFromPoint(x, y);
+
+	return getParentWhenInline() || element;
+
+	function getParentWhenInline() {
+		return (
+			isInline()
+			&&
+			element.parentElement
+		);
+
+		function isInline() {
+			return [ "A", "SPAN" ].includes(element.tagName);
 		}
 	}
+}
 
-	function createUtteranceFromElement(
-		element
-	) {
-		const utterance =
-			new SpeechSynthesisUtterance(
-				element.innerText,
+function createUtteranceFromElement(
+	element,
+) {
+	const utterance =
+		new SpeechSynthesisUtterance(
+			element.innerText,
+		);
+
+	utterance.onend = speakNextElement;
+	utterance.voice = voice;
+
+	return utterance;
+
+	function speakNextElement() {
+		if (!cancelled) {
+			const sibling = getNextSiblingWithText(element);
+			
+			if (sibling)
+				speakElement(sibling);
+		}
+	}
+}
+
+function getNextSiblingWithText(
+	{ nextElementSibling },
+) {
+	return (
+		getAfterNextWhenNoInnerText()
+		||
+		nextElementSibling
+	);
+
+	function getAfterNextWhenNoInnerText() {
+		return (
+			hasNoInnerText()
+			&&
+			getNextSiblingWithText(nextElementSibling)
+		);
+
+		function hasNoInnerText() {
+			return (
+				nextElementSibling
+				&&
+				!nextElementSibling.innerText
 			);
-
-		utterance.voice = voice;
-
-		return utterance;
+		}
 	}
 }
 
@@ -59,6 +117,6 @@ function onMouseMove({
 	y = clientY;
 }
 
-function onVoicesChanged() {
+function assignVoice() {
 	voice = window.speechSynthesis.getVoices().find(({ name }) => name === "Google US English");
 }
