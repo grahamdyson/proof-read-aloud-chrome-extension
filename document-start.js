@@ -30,18 +30,6 @@ function cancel() {
 	window.speechSynthesis.cancel();
 }
 
-function speakElement(
-	element,
-) {
-	cancelled = false;
-
-	window.speechSynthesis.speak(
-		createUtteranceFromElement(
-			element,
-		)
-	);
-}
-
 function getElementFromCurrentMouse() {
 	const element = document.elementFromPoint(x, y);
 
@@ -60,27 +48,71 @@ function getElementFromCurrentMouse() {
 	}
 }
 
-function createUtteranceFromElement(
+async function speakElement(
 	element,
 ) {
+	cancelled = false;
+
+	await speakLines(
+		getLines()
+	);
+
+	if (!cancelled)
+		speakNextElement();
+
+	function getLines() {
+		return (
+			element.innerText
+			.split("\n")
+			.filter(line => line)
+		);
+	}
+
+	function speakNextElement() {
+		const sibling = getNextSiblingWithText(element);
+
+		if (sibling)
+			speakElement(sibling);
+	}
+}
+
+async function speakLines(
+	lines,
+) {
+	for (const line of lines)
+		if (!cancelled)
+			await speak(line);
+}
+
+function speak(
+	text,
+) {
+	return (
+		new Promise(
+			resolve =>
+				window.speechSynthesis.speak(
+					createUtterance({
+						text,
+						onEnd: resolve,
+					}),
+				),
+			)
+	);
+}
+
+function createUtterance({
+	text,
+	onEnd,
+}) {
 	const utterance =
 		new SpeechSynthesisUtterance(
-			element.innerText,
+			text,
 		);
 
-	utterance.onend = speakNextElement;
+	utterance.onend = onEnd;
 	utterance.voice = voice;
 
 	return utterance;
-
-	function speakNextElement() {
-		if (!cancelled) {
-			const sibling = getNextSiblingWithText(element);
-			
-			if (sibling)
-				speakElement(sibling);
-		}
-	}
 }
 
 function getNextSiblingWithText(
