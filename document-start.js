@@ -125,27 +125,8 @@ function createUtterance({
 function speakElementSubsequentSiblings(
 	{ nextElementSibling },
 ) {
-	return (
-		getAfterNextWhenNoInnerText()
-		||
-		nextElementSibling
-	);
-
-	function getAfterNextWhenNoInnerText() {
-		return (
-			hasNoInnerText()
-			&&
-			getNextSiblingWithText(nextElementSibling)
-		);
-
-		function hasNoInnerText() {
-			return (
-				nextElementSibling
-				&&
-				!nextElementSibling.innerText
-			);
-		}
-	}
+	if (nextElementSibling && !cancelled)
+		return speakElementAndSubsequentSiblings(nextElementSibling);
 }
 
 function onMouseMove({
