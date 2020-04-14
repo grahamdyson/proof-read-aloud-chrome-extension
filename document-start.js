@@ -20,7 +20,7 @@ function cancelOrSpeak() {
 	if (window.speechSynthesis.speaking)
 		cancel();
 	else
-		speakElementAndParentSiblings(
+		speakNodeAndParentSiblings(
 			getElementFromCurrentMouse(),
 		);
 }
@@ -51,15 +51,16 @@ function getElementFromCurrentMouse() {
 	}
 }
 
-async function speakElementAndParentSiblings(
-	element,
+async function speakNodeAndParentSiblings(
+	node,
 ) {
 	cancelled = false;
 	
 	restartKeepAlive();
 
-	await speakNodeAndSubsequentSiblings(element);
-	await speakElementAncestorSubsequentSiblings(element);
+	await speakNode(node);
+	await speakNodeSubsequentSiblings(node);
+	await speakNodeAncestorElementSubsequentSiblings(node);
 
 	stopKeepAlive();
 }
@@ -78,20 +79,19 @@ function stopKeepAlive() {
 	clearInterval(keepAliveInterval);
 }
 
-async function speakElementAncestorSubsequentSiblings(
+async function speakNodeAncestorElementSubsequentSiblings(
 	{ parentElement },
 ) {
 	if (!cancelled && parentElement) {
 		await speakNodeSubsequentSiblings(parentElement)
-		await speakElementAncestorSubsequentSiblings(parentElement);
+		await speakNodeAncestorElementSubsequentSiblings(parentElement);
 	}
 }
 
-async function speakNodeAndSubsequentSiblings(
+function speakNode(
 	node,
 ) {
-	await speakText(getNodeText(node));
-	await speakNodeSubsequentSiblings(node);
+	return speakText(getNodeText(node));
 }
 
 function getNodeText({
@@ -160,11 +160,14 @@ function createUtterance({
 	return utterance;
 }
 
-function speakNodeSubsequentSiblings(
+async function speakNodeSubsequentSiblings(
 	{ nextSibling },
 ) {
-	if (nextSibling && !cancelled)
-		return speakNodeAndSubsequentSiblings(nextSibling);
+	if (nextSibling && !cancelled) {
+		if (nextSibling.tagName !== "CODE")
+			await speakNode(nextSibling);
+		await speakNodeSubsequentSiblings(nextSibling);
+	}
 }
 
 function onMouseMove({
