@@ -1,6 +1,6 @@
 'use strict';
 
-let cancelled, voice, x = 0, y = 0;
+let cancelled, keepAliveInterval, voice, x = 0, y = 0;
 
 if (window === top) {
 	window.addEventListener("keypress", onKeyPress);
@@ -27,6 +27,9 @@ function cancelOrSpeak() {
 
 function cancel() {
 	cancelled = true;
+	
+	stopKeepAlive();
+
 	window.speechSynthesis.cancel();
 }
 
@@ -52,8 +55,27 @@ async function speakElementAndParentSiblings(
 	element,
 ) {
 	cancelled = false;
+	
+	restartKeepAlive();
+
 	await speakNodeAndSubsequentSiblings(element);
 	await speakElementAncestorSubsequentSiblings(element);
+
+	stopKeepAlive();
+}
+
+function restartKeepAlive() {
+	stopKeepAlive();
+
+	keepAliveInterval =
+		setInterval(
+			() => window.speechSynthesis.resume(),
+			10000,
+		);
+}
+
+function stopKeepAlive() {
+	clearInterval(keepAliveInterval);
 }
 
 async function speakElementAncestorSubsequentSiblings(
