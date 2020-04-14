@@ -68,19 +68,35 @@ async function speakElementAncestorSubsequentSiblings(
 async function speakNodeAndSubsequentSiblings(
 	node,
 ) {
-	await speakLines(getNodeLines(node));
+	await speakText(getNodeText(node));
 	await speakNodeSubsequentSiblings(node);
 }
 
-function getNodeLines({
+function getNodeText({
 	innerText,
 	wholeText,
 }) {
+	return innerText || wholeText;
+}
+
+function speakText(
+	text,
+) {
 	return (
-		(innerText || wholeText)
-		.split("\n")
-		.filter(line => line)
+		text
+		&&
+		speakLines(
+			getLines(),
+		)
 	);
+
+	function getLines() {
+		return (
+			text
+			.split("\n")
+			.filter(line => line)
+		);
+	}
 }
 
 async function speakLines(
