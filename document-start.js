@@ -52,7 +52,7 @@ async function speakElementAndParentSiblings(
 	element,
 ) {
 	cancelled = false;
-	await speakElementAndSubsequentSiblings(element);
+	await speakNodeAndSubsequentSiblings(element);
 	await speakElementAncestorSubsequentSiblings(element);
 }
 
@@ -60,27 +60,27 @@ async function speakElementAncestorSubsequentSiblings(
 	{ parentElement },
 ) {
 	if (!cancelled && parentElement) {
-		await speakElementSubsequentSiblings(parentElement)
+		await speakNodeSubsequentSiblings(parentElement)
 		await speakElementAncestorSubsequentSiblings(parentElement);
 	}
 }
 
-async function speakElementAndSubsequentSiblings(
-	element,
+async function speakNodeAndSubsequentSiblings(
+	node,
 ) {
-	await speakLines(
-		getLines()
+	await speakLines(getNodeLines(node));
+	await speakNodeSubsequentSiblings(node);
+}
+
+function getNodeLines({
+	innerText,
+	wholeText,
+}) {
+	return (
+		(innerText || wholeText)
+		.split("\n")
+		.filter(line => line)
 	);
-
-	await speakElementSubsequentSiblings(element);
-
-	function getLines() {
-		return (
-			element.innerText
-			.split("\n")
-			.filter(line => line)
-		);
-	}
 }
 
 async function speakLines(
@@ -122,11 +122,11 @@ function createUtterance({
 	return utterance;
 }
 
-function speakElementSubsequentSiblings(
-	{ nextElementSibling },
+function speakNodeSubsequentSiblings(
+	{ nextSibling },
 ) {
-	if (nextElementSibling && !cancelled)
-		return speakElementAndSubsequentSiblings(nextElementSibling);
+	if (nextSibling && !cancelled)
+		return speakNodeAndSubsequentSiblings(nextSibling);
 }
 
 function onMouseMove({
